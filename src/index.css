@@ -1,0 +1,268 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* OpenCivics Brand Colors as CSS custom properties */
+    --oc-green: 78, 250, 159; /* #4efa9f */
+    --oc-blue: 59, 32, 233;   /* #3b20e9 */
+    --oc-pink: 250, 82, 115;  /* #fa5273 */
+    --oc-dark: 38, 34, 34;    /* #262222 */
+    --oc-light: 255, 255, 255; /* #ffffff */
+  }
+  
+  /* Solarpunk Theme (Light Mode) - Blue accent, light background */
+  :root, .solarpunk {
+    --background: var(--oc-light);
+    --foreground: var(--oc-dark);
+    --surface: 248, 250, 252; /* Very light gray */
+    --surface-secondary: 241, 245, 249; /* Slightly darker */
+    
+    --card: var(--oc-light);
+    --card-foreground: var(--oc-dark);
+    
+    --popover: var(--oc-light);
+    --popover-foreground: var(--oc-dark);
+    
+    --primary: var(--oc-blue);
+    --primary-foreground: var(--oc-light);
+    
+    --secondary: var(--surface);
+    --secondary-foreground: var(--oc-dark);
+    
+    --accent: var(--oc-blue);
+    --accent-foreground: var(--oc-light);
+    
+    --accent-pink: var(--oc-pink);
+    --accent-pink-foreground: var(--oc-light);
+    
+    --muted: var(--surface-secondary);
+    --muted-foreground: 100, 116, 139; /* Slate-500 */
+    
+    --destructive: var(--oc-pink);
+    --destructive-foreground: var(--oc-light);
+    
+    --success: var(--oc-green);
+    --success-foreground: var(--oc-dark);
+    
+    --warning: 251, 191, 36; /* Amber-400 */
+    --warning-foreground: var(--oc-dark);
+    
+    --border: 226, 232, 240; /* Slate-200 */
+    --input: var(--border);
+    --ring: var(--oc-blue);
+    
+    --radius: 0.75rem;
+  }
+  
+  .lunarpunk {
+    /* Lunarpunk Theme (Dark Mode) - Green accent, dark background */
+    --background: var(--oc-dark);
+    --foreground: var(--oc-light);
+    --surface: 30, 26, 26; /* Slightly lighter than dark */
+    --surface-secondary: 41, 37, 36; /* Even lighter */
+    
+    --card: var(--surface);
+    --card-foreground: var(--oc-light);
+    
+    --popover: var(--surface);
+    --popover-foreground: var(--oc-light);
+    
+    --primary: var(--oc-green);
+    --primary-foreground: var(--oc-dark);
+    
+    --secondary: var(--surface-secondary);
+    --secondary-foreground: var(--oc-light);
+    
+    --accent: var(--oc-green); /* Green for lunarpunk aesthetic */
+    --accent-foreground: var(--oc-dark);
+    
+    --accent-pink: var(--oc-pink);
+    --accent-pink-foreground: var(--oc-light);
+    
+    --muted: var(--surface-secondary);
+    --muted-foreground: 148, 163, 184; /* Slate-400 */
+    
+    --destructive: var(--oc-pink);
+    --destructive-foreground: var(--oc-light);
+    
+    --success: var(--oc-green);
+    --success-foreground: var(--oc-dark);
+    
+    --warning: 251, 191, 36; /* Amber-400 */
+    --warning-foreground: var(--oc-dark);
+    
+    --border: var(--surface-secondary);
+    --input: var(--surface-secondary);
+    --ring: var(--oc-green);
+  }
+}
+
+@layer base {
+  * {
+    border-color: rgb(var(--border));
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+    font-feature-settings: "cv11", "ss01";
+    font-variation-settings: "opsz" 32;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Typography */
+  .font-sans {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  .font-display {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+  
+  /* Apple-style button base */
+  .btn-ios {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    /* Apple-style shadow */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 
+                0 1px 2px 0 rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .btn-ios:active {
+    transform: scale(0.98);
+  }
+  
+  .btn-ios:hover {
+    /* More prominent hover shadow */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+  }
+  
+  .btn-ios:active {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+    transform: translateY(0) scale(0.98);
+  }
+  
+  /* Primary button - gradient style */
+  .btn-ios.btn-primary {
+    background: linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--primary)) 100%);
+    color: rgb(var(--accent-foreground));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Secondary button - system style */
+  .btn-ios.btn-secondary {
+    background: rgb(var(--card));
+    color: rgb(var(--card-foreground));
+    border: 1px solid rgb(var(--border));
+  }
+  
+  /* Success button */
+  .btn-ios.btn-success {
+    background: rgb(var(--success));
+    color: rgb(var(--success-foreground));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Destructive button */
+  .btn-ios.btn-destructive {
+    background: rgb(var(--destructive));
+    color: rgb(var(--destructive-foreground));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Utilities */
+  .text-gradient {
+    background: linear-gradient(135deg, rgb(var(--accent)), rgb(var(--primary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--primary)) 100%);
+  }
+  
+  .bg-gradient-secondary {
+    background: linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--accent-pink)) 100%);
+  }
+  
+  .glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .lunarpunk .glass {
+    background-color: rgba(38, 34, 34, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Ensure theme classes override default styles */
+  html.solarpunk, body.solarpunk {
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+  }
+  
+  html.lunarpunk, body.lunarpunk {
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+  }
+  
+  /* Animation for theme transitions */
+  .theme-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--surface));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--muted-foreground));
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--primary));
+  }
+}
+
+/* Remove default body constraints */
+body {
+  margin: 0;
+  padding: 0;
+  max-width: none;
+}
+
+/* Footer styling */
+.footer {
+  background: linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--primary)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
