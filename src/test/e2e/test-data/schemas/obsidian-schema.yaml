@@ -1,0 +1,45 @@
+---
+name: "Obsidian Knowledge Base"
+version: "1.0"
+description: "YAML frontmatter schema for personal knowledge management in Obsidian"
+fields:
+  - name: "title"
+    type: "string"
+    description: "The title of the note"
+    required: true
+  - name: "tags"
+    type: "array"
+    description: "List of tags for categorization"
+    required: false
+  - name: "created"
+    type: "date"
+    description: "Creation date"
+    required: true
+  - name: "modified"
+    type: "date"
+    description: "Last modification date"
+    required: false
+  - name: "status"
+    type: "string"
+    description: "Status of the note (draft, review, published)"
+    required: false
+  - name: "author"
+    type: "string"
+    description: "Author of the note"
+    required: false
+  - name: "aliases"
+    type: "array"
+    description: "Alternative names for the note"
+    required: false
+  - name: "type"
+    type: "string"
+    description: "Type of note (concept, person, project, etc.)"
+    required: false
+  - name: "priority"
+    type: "number"
+    description: "Priority level (1-5)"
+    required: false
+  - name: "links"
+    type: "array"
+    description: "External links referenced in the note"
+    required: false 

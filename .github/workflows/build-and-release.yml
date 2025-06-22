@@ -1,0 +1,172 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: './app/package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd app
+        npm ci
+        
+    - name: Run linter
+      run: |
+        cd app
+        npm run lint
+        
+    - name: Run tests
+      run: |
+        cd app
+        npm test
+        
+    - name: Import Apple certificates (macOS)
+      if: matrix.os == 'macos-latest' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      env:
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      run: |
+        echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+        security create-keychain -p "" build.keychain
+        security import certificate.p12 -k ~/Library/Keychains/build.keychain -P $APPLE_CERTIFICATE_PASSWORD -T /usr/bin/codesign
+        security list-keychains -s ~/Library/Keychains/build.keychain
+        security default-keychain -s ~/Library/Keychains/build.keychain
+        security unlock-keychain -p "" ~/Library/Keychains/build.keychain
+        security set-key-partition-list -S apple-tool:,apple: -s -k "" ~/Library/Keychains/build.keychain
+        
+    - name: Build app
+      env:
+        # Code signing certificates
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        # Windows code signing
+        CSC_LINK: ${{ secrets.CSC_LINK }}
+        CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        # GitHub token for auto-updater
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd app
+        npm run make
+        
+    - name: Notarize app (macOS)
+      if: matrix.os == 'macos-latest' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      env:
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      run: |
+        cd app
+        npx electron-notarize --bundle-id com.omniharmonic.correlate --apple-id $APPLE_ID --apple-id-password $APPLE_ID_PASSWORD --team-id $APPLE_TEAM_ID ./out/Correlate-darwin-x64/Correlate.app
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: correlate-${{ matrix.os }}
+        path: |
+          app/out/**/*
+          !app/out/**/node_modules
+          
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Correlate ${{ github.ref }}
+        body: |
+          ## Correlate ${{ github.ref }}
+          
+          **AI-powered schema correlation and document translation tool**
+          
+          ### 🎉 New Features
+          - Enhanced schema correlation with confidence-based processing
+          - Vector store integration for automatic wiki-link generation  
+          - Professional lunarpunk/solarpunk theming
+          - Persistent embedding cache and sharing capabilities
+          - Comprehensive analytics and cache management
+          
+          ### 📦 Downloads
+          - **macOS**: `Correlate-${{ github.ref }}-mac.dmg`
+          - **Windows**: `Correlate-${{ github.ref }}-win.exe` 
+          - **Linux**: `Correlate-${{ github.ref }}-linux.AppImage`
+          
+          ### 🔧 Requirements
+          - **Ollama** for AI-powered correlation (install from [ollama.ai](https://ollama.ai))
+          - Run `ollama pull llama3.1` or `ollama pull mistral` for models
+          
+          ### 🆕 What's New
+          - File-based embedding persistence across sessions
+          - Export/import embedding databases for collaboration
+          - Real-time cache analytics and statistics
+          - Auto-update mechanism for seamless updates
+          - Enhanced button interactions and scroll prevention
+          - Comprehensive setup instructions in About dialog
+          
+        draft: false
+        prerelease: false
+        
+    - name: Upload macOS Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./correlate-macos-latest/make/Correlate.dmg
+        asset_name: Correlate-${{ github.ref }}-mac.dmg
+        asset_content_type: application/octet-stream
+        
+    - name: Upload Windows Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./correlate-windows-latest/make/squirrel.windows/x64/Correlate Setup.exe
+        asset_name: Correlate-${{ github.ref }}-win.exe
+        asset_content_type: application/octet-stream
+        
+    - name: Upload Linux Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./correlate-ubuntu-latest/make/Correlate.AppImage
+        asset_name: Correlate-${{ github.ref }}-linux.AppImage
+        asset_content_type: application/octet-stream 

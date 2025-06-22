@@ -1,0 +1,73 @@
+{
+  "name": "Notion Database Schema",
+  "version": "2.0",
+  "description": "Notion database properties schema for structured knowledge management",
+  "fields": [
+    {
+      "name": "Name",
+      "type": "string",
+      "description": "Primary title of the page",
+      "required": true
+    },
+    {
+      "name": "Categories",
+      "type": "array",
+      "description": "Multi-select categories for organization",
+      "required": false
+    },
+    {
+      "name": "Date Created",
+      "type": "date",
+      "description": "Page creation timestamp",
+      "required": true
+    },
+    {
+      "name": "Last Edited",
+      "type": "date",
+      "description": "Last edit timestamp",
+      "required": false
+    },
+    {
+      "name": "Content Status",
+      "type": "string",
+      "description": "Current status (Not Started, In Progress, Complete)",
+      "required": false
+    },
+    {
+      "name": "Owner",
+      "type": "string",
+      "description": "Person responsible for the content",
+      "required": false
+    },
+    {
+      "name": "Related Pages",
+      "type": "array",
+      "description": "Links to related pages in the database",
+      "required": false
+    },
+    {
+      "name": "Content Type",
+      "type": "string",
+      "description": "Type of content (Article, Reference, Meeting Notes, etc.)",
+      "required": false
+    },
+    {
+      "name": "Urgency",
+      "type": "number",
+      "description": "Urgency rating from 1-10",
+      "required": false
+    },
+    {
+      "name": "External URLs",
+      "type": "array",
+      "description": "Collection of external reference links",
+      "required": false
+    },
+    {
+      "name": "Summary",
+      "type": "string",
+      "description": "Brief summary or description",
+      "required": false
+    }
+  ]
+} 
