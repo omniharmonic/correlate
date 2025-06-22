@@ -786,12 +786,16 @@ const VectorStorePanel: React.FC = () => {
                onClick={(e) => {
                  e.preventDefault();
                  e.stopPropagation();
-                 // Approve all documents with similarity above threshold
-                 documentsWithRelated.forEach(doc => {
-                   const avgSimilarity = doc.relatedDocuments.reduce((sum, rel) => sum + rel.similarity, 0) / doc.relatedDocuments.length;
-                   if (avgSimilarity >= batchThreshold && !doc.isApproved) {
-                     approveDocumentRelations(doc.documentPath);
-                   }
+                 preventScrollBehavior(() => {
+                   // Approve all documents with similarity above threshold
+                   documentsWithRelated.forEach(doc => {
+                     if (doc.relatedDocuments.length === 0) return;
+                     const avgSimilarity = doc.relatedDocuments.reduce((sum, rel) => sum + rel.similarity, 0) / doc.relatedDocuments.length;
+                     console.log(`Document: ${doc.documentPath.split('/').pop()}, avgSimilarity: ${avgSimilarity}, batchThreshold: ${batchThreshold}, should approve: ${avgSimilarity >= batchThreshold}`);
+                     if (avgSimilarity >= batchThreshold && !doc.isApproved) {
+                       approveDocumentRelations(doc.documentPath);
+                     }
+                   });
                  });
                }}
               style={{
@@ -815,7 +819,7 @@ const VectorStorePanel: React.FC = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleProcessBatchWikiLinks();
+                  preventScrollBehavior(() => handleProcessBatchWikiLinks());
                 }}
                 disabled={isLoading}
                 style={{
@@ -865,7 +869,7 @@ const VectorStorePanel: React.FC = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleApproveDocumentRelations(docWithRelated.documentPath);
+                    preventScrollBehavior(() => handleApproveDocumentRelations(docWithRelated.documentPath));
                   }}
                   style={{
                     padding: '4px 8px',
@@ -1022,7 +1026,7 @@ const VectorStorePanel: React.FC = () => {
                 </div>
               )}
             </div>
-            <ActionButton onClick={() => { generateEmbeddings(); }} disabled={!canGenerateEmbeddings}>
+            <ActionButton onClick={() => { preventScrollBehavior(() => generateEmbeddings()); }} disabled={!canGenerateEmbeddings}>
               {embeddings.length > 0 ? 'Regenerate Embeddings' : 'Generate Embeddings'}
             </ActionButton>
           </div>
@@ -1061,7 +1065,7 @@ const VectorStorePanel: React.FC = () => {
                 </div>
               )}
             </div>
-            <ActionButton onClick={() => { indexDocuments(); }} disabled={!canIndexDocuments}>
+            <ActionButton onClick={() => { preventScrollBehavior(() => indexDocuments()); }} disabled={!canIndexDocuments}>
               {vectorStoreStats ? 'Reindex Documents' : 'Index Documents'}
             </ActionButton>
           </div>
@@ -1184,7 +1188,7 @@ const VectorStorePanel: React.FC = () => {
 
               {selectedDocument && relatedDocuments.length > 0 && (
                 <ActionButton 
-                  onClick={() => { addWikiLinksToDocument(selectedDocument!); }}
+                  onClick={() => { preventScrollBehavior(() => addWikiLinksToDocument(selectedDocument!)); }}
                   variant="success"
                 >
                   Add Wiki-Links to Document
