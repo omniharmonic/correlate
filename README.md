@@ -159,8 +159,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/omniharmonic/correlate/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/omniharmonic/correlate/discussions)
-- **Email**: support@opencivics.org
+- **Email**: team@opencivics.co
 
 ---
 
-**Built with ❤️ by the OpenCivics team**
+**Built with ❤️ by OpenCivics Labs**
