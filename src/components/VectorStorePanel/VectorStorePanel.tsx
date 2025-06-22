@@ -743,13 +743,28 @@ const VectorStorePanel: React.FC = () => {
         marginBottom: '16px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h4 style={{ 
-            margin: 0,
-            fontSize: '16px',
-            color: theme === 'lunarpunk' ? 'rgb(255, 255, 255)' : 'rgb(38, 34, 34)'
-          }}>
-            Batch Results ({approvedCount}/{documentsWithRelated.length} approved)
-          </h4>
+          <div>
+            <h4 style={{ 
+              margin: 0,
+              fontSize: '16px',
+              color: theme === 'lunarpunk' ? 'rgb(255, 255, 255)' : 'rgb(38, 34, 34)'
+            }}>
+              Batch Results ({approvedCount}/{documentsWithRelated.length} approved)
+            </h4>
+            {documentsWithRelated.length > 0 && (
+              <div style={{
+                fontSize: '11px',
+                color: theme === 'lunarpunk' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(38, 34, 34, 0.6)',
+                marginTop: '2px'
+              }}>
+                {documentsWithRelated.filter(doc => {
+                  if (doc.relatedDocuments.length === 0 || doc.isApproved) return false;
+                  // Count documents that have at least one related document above threshold
+                  return doc.relatedDocuments.some(rel => rel.similarity >= batchThreshold);
+                }).length} documents with links above {Math.round(batchThreshold * 100)}% threshold
+              </div>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {/* Batch Approve Controls */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -757,59 +772,117 @@ const VectorStorePanel: React.FC = () => {
                 fontSize: '12px',
                 color: theme === 'lunarpunk' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(38, 34, 34, 0.8)'
               }}>
-                Batch Approve Above:
+                Threshold:
               </label>
-                             <input
-                 type="range"
-                 min="0.1"
-                 max="0.9"
-                 step="0.1"
-                 value={batchThreshold}
-                 onChange={(e) => {
-                   const threshold = parseFloat(e.target.value);
-                   setBatchThreshold(threshold);
-                 }}
-                 style={{ width: '80px' }}
-               />
-               <span style={{ 
-                 fontSize: '10px',
-                 color: theme === 'lunarpunk' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(38, 34, 34, 0.6)',
-                 minWidth: '30px'
-               }}>
-                 {Math.round(batchThreshold * 100)}%
-               </span>
+              <input
+                type="range"
+                min="0.1"
+                max="0.9"
+                step="0.1"
+                value={batchThreshold}
+                onChange={(e) => {
+                  const threshold = parseFloat(e.target.value);
+                  setBatchThreshold(threshold);
+                }}
+                style={{ 
+                  width: '80px',
+                  cursor: 'pointer'
+                }}
+              />
+              <span style={{ 
+                fontSize: '12px',
+                fontWeight: '600',
+                color: theme === 'lunarpunk' ? 'rgb(78, 250, 159)' : 'rgb(59, 32, 233)',
+                minWidth: '35px',
+                textAlign: 'center'
+              }}>
+                {Math.round(batchThreshold * 100)}%
+              </span>
             </div>
             
             {/* Batch Approve Button */}
-                         <button
-               type="button"
-               onClick={(e) => {
-                 e.preventDefault();
-                 e.stopPropagation();
-                 preventScrollBehavior(() => {
-                   // Approve all documents with similarity above threshold
-                   documentsWithRelated.forEach(doc => {
-                     if (doc.relatedDocuments.length === 0) return;
-                     const avgSimilarity = doc.relatedDocuments.reduce((sum, rel) => sum + rel.similarity, 0) / doc.relatedDocuments.length;
-                     console.log(`Document: ${doc.documentPath.split('/').pop()}, avgSimilarity: ${avgSimilarity}, batchThreshold: ${batchThreshold}, should approve: ${avgSimilarity >= batchThreshold}`);
-                     if (avgSimilarity >= batchThreshold && !doc.isApproved) {
-                       approveDocumentRelations(doc.documentPath);
-                     }
-                   });
-                 });
-               }}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Capture current scroll position
+                const currentScroll = window.pageYOffset;
+                
+                // Process batch approvals with intelligent filtering
+                let processedCount = 0;
+                let totalLinksRemoved = 0;
+                
+                documentsWithRelated.forEach(doc => {
+                  if (doc.relatedDocuments.length === 0 || doc.isApproved) {
+                    return;
+                  }
+                  
+                  // Filter related documents to only keep those above threshold
+                  const originalCount = doc.relatedDocuments.length;
+                  const filteredRelatedDocs = doc.relatedDocuments.filter(relatedDoc => 
+                    relatedDoc.similarity >= batchThreshold
+                  );
+                  
+                  const removedCount = originalCount - filteredRelatedDocs.length;
+                  totalLinksRemoved += removedCount;
+                  
+                  console.log(`Document: ${doc.documentPath.split('/').pop()}, original links: ${originalCount}, filtered to: ${filteredRelatedDocs.length}, removed: ${removedCount} links below ${Math.round(batchThreshold * 100)}%`);
+                  
+                  // If we have any links above threshold, update the document with filtered links and approve
+                  if (filteredRelatedDocs.length > 0) {
+                    processedCount++;
+                    
+                    // First filter the related documents
+                    filteredRelatedDocs.forEach(relatedDocToRemove => {
+                      if (relatedDocToRemove.similarity < batchThreshold) {
+                        removeRelatedDocument(doc.documentPath, relatedDocToRemove.filePath);
+                      }
+                    });
+                    
+                    // Remove low-similarity related documents
+                    doc.relatedDocuments.forEach(relatedDoc => {
+                      if (relatedDoc.similarity < batchThreshold) {
+                        removeRelatedDocument(doc.documentPath, relatedDoc.filePath);
+                      }
+                    });
+                    
+                    // Then approve the document
+                    approveDocumentRelations(doc.documentPath);
+                  }
+                });
+                
+                // Restore scroll position after state updates
+                requestAnimationFrame(() => {
+                  window.scrollTo({ top: currentScroll, behavior: 'instant' });
+                });
+                
+                // Show feedback to user
+                if (processedCount > 0) {
+                  console.log(`Batch processed ${processedCount} documents, removed ${totalLinksRemoved} links below ${Math.round(batchThreshold * 100)}% threshold`);
+                } else {
+                  console.log(`No documents had links meeting the ${Math.round(batchThreshold * 100)}% similarity threshold`);
+                }
+              }}
+              disabled={documentsWithRelated.length === 0}
               style={{
                 padding: '6px 12px',
                 borderRadius: '4px',
                 border: 'none',
-                backgroundColor: theme === 'lunarpunk' ? 'rgba(78, 250, 159, 0.2)' : 'rgba(59, 32, 233, 0.1)',
-                color: theme === 'lunarpunk' ? 'rgb(78, 250, 159)' : 'rgb(59, 32, 233)',
+                backgroundColor: documentsWithRelated.length === 0 
+                  ? 'rgba(128, 128, 128, 0.2)' 
+                  : theme === 'lunarpunk' ? 'rgba(78, 250, 159, 0.2)' : 'rgba(59, 32, 233, 0.1)',
+                color: documentsWithRelated.length === 0
+                  ? 'rgba(128, 128, 128, 0.6)'
+                  : theme === 'lunarpunk' ? 'rgb(78, 250, 159)' : 'rgb(59, 32, 233)',
                 fontSize: '10px',
                 fontWeight: '500',
-                cursor: 'pointer'
+                cursor: documentsWithRelated.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: documentsWithRelated.length === 0 ? 0.5 : 1
               }}
             >
-              Batch Approve
+              Batch Approve Above {Math.round(batchThreshold * 100)}%
             </button>
             
             {/* Apply Wiki-Links Button */}
@@ -856,14 +929,37 @@ const VectorStorePanel: React.FC = () => {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h5 style={{ 
-                  margin: 0,
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: theme === 'lunarpunk' ? 'rgb(255, 255, 255)' : 'rgb(38, 34, 34)'
-                }}>
-                  {docWithRelated.documentPath.split('/').pop()}
-                </h5>
+                <div>
+                  <h5 style={{ 
+                    margin: 0,
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: theme === 'lunarpunk' ? 'rgb(255, 255, 255)' : 'rgb(38, 34, 34)'
+                  }}>
+                    {docWithRelated.documentPath.split('/').pop()}
+                  </h5>
+                  {docWithRelated.relatedDocuments.length > 0 && (
+                    <div style={{
+                      fontSize: '11px',
+                      color: theme === 'lunarpunk' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(38, 34, 34, 0.6)',
+                      marginTop: '2px'
+                    }}>
+                      {(() => {
+                        const linksAboveThreshold = docWithRelated.relatedDocuments.filter(rel => rel.similarity >= batchThreshold).length;
+                        const totalLinks = docWithRelated.relatedDocuments.length;
+                        const avgSimilarity = ((docWithRelated.relatedDocuments.reduce((sum, rel) => sum + rel.similarity, 0) / docWithRelated.relatedDocuments.length) * 100).toFixed(1);
+                        
+                        return `${linksAboveThreshold}/${totalLinks} links above ${Math.round(batchThreshold * 100)}% • Avg: ${avgSimilarity}%${
+                          linksAboveThreshold > 0 && !docWithRelated.isApproved 
+                            ? ' • Eligible for filtering' 
+                            : linksAboveThreshold === 0
+                              ? ' • No eligible links'
+                              : ''
+                        }`;
+                      })()}
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={(e) => {

@@ -43,8 +43,10 @@ export class EmbeddingCacheManager {
 
   private getCacheFilePath(libraryPath: string): string {
     // Create a safe filename from the library path
-    const safeFileName = Buffer.from(libraryPath).toString('base64').replace(/[\/\+]/g, '_') + '.json';
-    return path.join(this.cacheDir, safeFileName);
+    const safeName = libraryPath
+      .replace(/[/\\:*?"<>|]/g, '_')
+      .replace(/\s+/g, '_');
+    return path.join(this.cacheDir, `${safeName}_embeddings.json`);
   }
 
   /**
@@ -53,7 +55,7 @@ export class EmbeddingCacheManager {
   async saveEmbeddings(
     embeddings: DocumentEmbedding[], 
     libraryPath: string, 
-    modelUsed: string = 'unknown'
+    modelUsed = 'unknown'
   ): Promise<void> {
     try {
       const cacheEntry: EmbeddingCacheEntry = {

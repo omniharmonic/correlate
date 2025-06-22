@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import path from 'node:path';
+import fs from 'node:fs/promises';
+import yaml from 'js-yaml';
 import started from 'electron-squirrel-startup';
 import { CorrelationEngine } from './services/CorrelationEngine';
 import { FileSystemManager } from './services/FileSystemManager';
@@ -130,9 +132,13 @@ app.on('ready', () => {
 
   ipcMain.handle('fs:processDocuments', async (event, sourcePath, targetPath, approvedTranslations) => {
     try {
-      console.log('🚀 Starting comprehensive document processing:', { sourcePath, targetPath, approvedTranslations });
+      console.log('🚀 Starting document processing with approved translations:', { 
+        sourcePath, 
+        targetPath, 
+        approvedCount: approvedTranslations.length 
+      });
       
-      // Get schemas for comprehensive translation
+      // Get schemas for translation context
       const schemas = await fileSystemManager.getSchemasFromDirectories(sourcePath, targetPath);
       const { sourceSchema, targetSchema } = schemas;
       console.log('📋 Schemas loaded:', {
@@ -144,92 +150,77 @@ app.on('ready', () => {
       const documents = await fileSystemManager.readMarkdownFiles(sourcePath);
       console.log(`📄 Found ${documents.length} documents to process`);
       
-      // Create comprehensive correlation mappings
-      const explicitMappings = approvedTranslations.map((translation: TranslationSample) => {
-        const sourceFieldName = translation.sourceTag.split(':')[0].trim();
-        const targetFieldName = translation.translatedTag.split(':')[0].trim();
+      if (documents.length === 0) {
+        throw new Error('No documents found in source directory');
+      }
+      
+      // Convert approved translations to correlation mappings
+      const mappings = approvedTranslations.map((translation: TranslationSample) => {
+        const sourceTag = translation.sourceTag.trim();
+        const translatedTag = translation.translatedTag.trim();
+        
+        // Extract field names (before the colon)
+        const sourceFieldName = sourceTag.split(':')[0].trim();
+        const targetFieldName = translatedTag.split(':')[0].trim();
         
         // Find the actual schema fields
         const sourceField = sourceSchema.fields.find(f => f.name === sourceFieldName) || 
-                          { name: sourceFieldName, type: 'string' };
+                          { name: sourceFieldName, type: 'string', description: '' };
         const targetField = targetSchema.fields.find(f => f.name === targetFieldName) || 
-                          { name: targetFieldName, type: 'string' };
+                          { name: targetFieldName, type: 'string', description: '' };
+        
+        // Extract values (after the colon) for transformation
+        const sourceValue = sourceTag.includes(':') ? sourceTag.split(':')[1].trim().replace(/['"]/g, '') : null;
+        const targetValue = translatedTag.includes(':') ? translatedTag.split(':')[1].trim().replace(/['"]/g, '') : null;
         
         return {
           sourceField,
           targetField,
-          confidence: 1.0,
+          confidence: 1.0, // User-approved translations have high confidence
           transform: (value: any) => {
-            // Enhanced value transformation
-            const sourceValue = translation.sourceTag.split(':')[1]?.trim().replace(/['"]/g, '');
-            const targetValue = translation.translatedTag.split(':')[1]?.trim().replace(/['"]/g, '');
-            
-            // Handle different value transformations
-            if (sourceValue && targetValue) {
-              if (value === sourceValue) return targetValue;
-              
-              // Handle array transformations
-              if (Array.isArray(value) && value.includes(sourceValue)) {
-                return value.map(v => v === sourceValue ? targetValue : v);
-              }
+            // If we have specific value transformations, apply them
+            if (sourceValue && targetValue && value === sourceValue) {
+              return targetValue;
             }
             
+            // For array values, transform matching elements
+            if (Array.isArray(value) && sourceValue && targetValue) {
+              return value.map(v => v === sourceValue ? targetValue : v);
+            }
+            
+            // Otherwise, pass through the value as-is
             return value;
           }
         };
       });
       
-      // Generate automatic mappings using correlation engine for remaining fields
-      console.log('🔗 Generating automatic correlations for remaining fields...');
-      const correlationResult = await correlationEngine.generateCorrelation(sourceSchema, targetSchema);
-      
-      // Combine explicit and automatic mappings, prioritizing explicit ones
-      const allMappings = [...explicitMappings];
-             const explicitSourceFields = new Set(explicitMappings.map((m: any) => m.sourceField.name));
-      
-      // Add high-confidence automatic mappings for unmapped fields
-      for (const autoMapping of correlationResult.mappings) {
-        if (!explicitSourceFields.has(autoMapping.sourceField.name) && autoMapping.confidence >= 0.7) {
-          allMappings.push(autoMapping);
-          console.log(`➕ Added automatic mapping: ${autoMapping.sourceField.name} -> ${autoMapping.targetField.name} (confidence: ${autoMapping.confidence})`);
-        }
-      }
-      
-      console.log(`🔗 Using ${allMappings.length} total mappings (${explicitMappings.length} explicit + ${allMappings.length - explicitMappings.length} automatic)`);
+      console.log(`🔗 Created ${mappings.length} translation mappings from approved samples`);
       
       // Create output directory
       const outputPath = path.join(targetPath, 'translated-documents');
-      const fs = require('fs').promises;
-      try {
-        await fs.mkdir(outputPath, { recursive: true });
-      } catch (error) {
-        // Directory might already exist
-      }
+      await fileSystemManager.ensureDirectoryExists(outputPath);
+      console.log(`📁 Output directory prepared: ${outputPath}`);
       
-      // Process each document with comprehensive translation
+      // Process each document using the translation engine
+      const translatedDocuments = [];
       let processedCount = 0;
-      let totalFieldsMapped = 0;
+      let errorCount = 0;
       
       for (const doc of documents) {
         try {
-          console.log(`\n🔄 Processing document: ${path.basename(doc.filePath)}`);
-          console.log(`📋 Original frontmatter:`, doc.frontmatter);
+          console.log(`\n🔄 Processing: ${path.basename(doc.filePath)}`);
+          console.log(`📋 Original frontmatter fields: ${Object.keys(doc.frontmatter).join(', ')}`);
           
-          const translatedDoc = translationEngine.translateDocument(doc, allMappings, targetSchema);
+          // Apply translations using the translation engine
+          const translatedDoc = translationEngine.translateDocument(doc, mappings, targetSchema);
           
-          // Count mapped fields for statistics
-          const originalFieldCount = Object.keys(doc.frontmatter).length;
-          const translatedFieldCount = Object.keys(translatedDoc.frontmatter).length;
-          totalFieldsMapped += translatedFieldCount;
-          
-          // Generate output filename
+          // Generate output file path
           const filename = path.basename(doc.filePath);
           const outputFilePath = path.join(outputPath, filename);
           
-          // Write the translated document with better YAML formatting
+          // Format the translated document content
           let frontmatterYaml = '';
           if (Object.keys(translatedDoc.frontmatter).length > 0) {
-            const yaml = require('js-yaml');
             try {
               frontmatterYaml = `---\n${yaml.dump(translatedDoc.frontmatter, { 
                 indent: 2, 
@@ -239,39 +230,55 @@ app.on('ready', () => {
               })}---\n\n`;
             } catch (yamlError) {
               console.warn('⚠️ YAML formatting failed, using fallback:', yamlError.message);
-              frontmatterYaml = `---\n${Object.entries(translatedDoc.frontmatter).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join('\n')}\n---\n\n`;
+              // Fallback to simple key-value format
+              const entries = Object.entries(translatedDoc.frontmatter)
+                .map(([key, value]) => `${key}: ${JSON.stringify(value)}`);
+              frontmatterYaml = `---\n${entries.join('\n')}\n---\n\n`;
             }
           }
           
           const fullContent = frontmatterYaml + translatedDoc.content;
+          
+          // Write the translated document
           await fs.writeFile(outputFilePath, fullContent, 'utf8');
           
+          translatedDocuments.push({
+            originalPath: doc.filePath,
+            outputPath: outputFilePath,
+            originalFields: Object.keys(doc.frontmatter).length,
+            translatedFields: Object.keys(translatedDoc.frontmatter).length
+          });
+          
           processedCount++;
-          console.log(`✅ Processed: ${filename} (${originalFieldCount} -> ${translatedFieldCount} fields)`);
-          console.log(`📁 Output: ${outputFilePath}`);
+          console.log(`✅ Translated: ${filename}`);
+          console.log(`   Fields: ${Object.keys(doc.frontmatter).length} → ${Object.keys(translatedDoc.frontmatter).length}`);
+          console.log(`   Output: ${outputFilePath}`);
+          
         } catch (docError) {
-          console.error(`❌ Failed to process document ${doc.filePath}:`, docError);
+          errorCount++;
+          console.error(`❌ Failed to process ${doc.filePath}:`, docError);
         }
       }
       
-      const avgFieldsPerDoc = processedCount > 0 ? Math.round(totalFieldsMapped / processedCount) : 0;
+      // Final summary
       console.log(`\n🎉 Document processing completed!`);
-      console.log(`📊 Statistics:`);
-      console.log(`   - Documents processed: ${processedCount}`);
-      console.log(`   - Total fields mapped: ${totalFieldsMapped}`);
-      console.log(`   - Average fields per document: ${avgFieldsPerDoc}`);
+      console.log(`📊 Results:`);
+      console.log(`   - Total documents: ${documents.length}`);
+      console.log(`   - Successfully processed: ${processedCount}`);
+      console.log(`   - Errors: ${errorCount}`);
       console.log(`   - Output directory: ${outputPath}`);
       
       return { 
         success: true, 
         data: { 
-          processedCount, 
+          processedCount,
+          errorCount,
+          totalDocuments: documents.length,
           outputPath,
-          totalFieldsMapped,
-          avgFieldsPerDoc,
-          mappingsUsed: allMappings.length
+          translatedDocuments
         } 
       };
+      
     } catch (error) {
       console.error('❌ Document processing failed:', error);
       return { success: false, error: error.message };

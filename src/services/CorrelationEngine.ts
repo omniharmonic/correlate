@@ -58,38 +58,57 @@ export class CorrelationEngine {
    * @returns The refined correlation mapping.
    */
   public refineCorrelation(mappings: CorrelationMapping[], feedback: UserFeedback[]): CorrelationMapping[] {
-    let refinedMappings = [...mappings];
-
-    for (const item of feedback) {
-      const { originalMapping, type, correctedMapping } = item;
-      const index = refinedMappings.findIndex(
-        m => m.sourceField.name === originalMapping.sourceField.name
+    console.log(`🔧 Refining correlation based on ${feedback.length} feedback items`);
+    
+    const refinedMappings = mappings.map(mapping => {
+      const relevantFeedback = feedback.find(fb => 
+        fb.originalMapping.sourceField.name === mapping.sourceField.name &&
+        fb.originalMapping.targetField.name === mapping.targetField.name
       );
 
-      if (index === -1) {
-        // The mapping to be refined does not exist, so we skip it.
-        console.warn('Original mapping for feedback not found:', originalMapping);
-        continue;
+      if (!relevantFeedback) {
+        return mapping; // No feedback, keep original
       }
 
-      switch (type) {
+      switch (relevantFeedback.type) {
         case FeedbackType.APPROVE:
-          refinedMappings[index].confidence = 1.0;
-          break;
+          // Increase confidence for approved mappings
+          console.log(`✅ Approved mapping: ${mapping.sourceField.name} -> ${mapping.targetField.name}`);
+          return {
+            ...mapping,
+            confidence: Math.min(1.0, mapping.confidence + 0.2)
+          };
+          
         case FeedbackType.REJECT:
-          refinedMappings.splice(index, 1);
-          break;
+          // Decrease confidence for rejected mappings
+          console.log(`❌ Rejected mapping: ${mapping.sourceField.name} -> ${mapping.targetField.name}`);
+          return {
+            ...mapping,
+            confidence: Math.max(0.0, mapping.confidence - 0.5)
+          };
+          
         case FeedbackType.EDIT:
-          if (correctedMapping) {
-            refinedMappings[index] = {
-              ...correctedMapping,
-              confidence: 1.0, // Mark as high confidence since it's a manual edit.
+          // Use corrected mapping if provided
+          if (relevantFeedback.correctedMapping) {
+            console.log(`✏️ Edited mapping: ${mapping.sourceField.name} -> ${relevantFeedback.correctedMapping.targetField.name}`);
+            return {
+              ...relevantFeedback.correctedMapping,
+              confidence: 0.9 // High confidence for user-corrected mappings
             };
           }
-          break;
+          return mapping;
+          
+        default:
+          return mapping;
       }
-    }
-    return refinedMappings;
+    });
+    
+    // Filter out very low confidence mappings (< 0.3)
+    const filteredMappings = refinedMappings.filter(mapping => mapping.confidence >= 0.3);
+    
+    console.log(`🎯 Refined ${mappings.length} mappings to ${filteredMappings.length} (removed ${mappings.length - filteredMappings.length} low-confidence mappings)`);
+    
+    return filteredMappings;
   }
 
   /**

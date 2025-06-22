@@ -3,7 +3,7 @@ import { Document } from '../shared/types/document';
 import { YamlSchema, SchemaField, FieldType } from '../shared/types/schema';
 
 export class TranslationEngine {
-  private confidenceThreshold: number = 0.7; // Configurable confidence threshold
+  private confidenceThreshold = 0.7; // Configurable confidence threshold
 
   /**
    * Sets the confidence threshold for direct field mapping
