@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import path from 'node:path';
+import fs from 'node:fs/promises';
+import yaml from 'js-yaml';
 import started from 'electron-squirrel-startup';
 import { CorrelationEngine } from './services/CorrelationEngine';
 import { FileSystemManager } from './services/FileSystemManager';
@@ -199,7 +201,7 @@ app.on('ready', () => {
       
       // Create output directory
       const outputPath = path.join(targetPath, 'translated-documents');
-      const fs = require('fs').promises;
+      // fs already imported at top
       try {
         await fs.mkdir(outputPath, { recursive: true });
       } catch (error) {
@@ -229,7 +231,7 @@ app.on('ready', () => {
           // Write the translated document with better YAML formatting
           let frontmatterYaml = '';
           if (Object.keys(translatedDoc.frontmatter).length > 0) {
-            const yaml = require('js-yaml');
+            // yaml already imported at top
             try {
               frontmatterYaml = `---\n${yaml.dump(translatedDoc.frontmatter, { 
                 indent: 2, 

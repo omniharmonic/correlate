@@ -16,7 +16,7 @@ export class ValidationEngine {
 
     for (const schemaField of targetSchema.fields) {
       if (schemaField.required) {
-        if (!translatedDoc.frontmatter.hasOwnProperty(schemaField.name)) {
+        if (!Object.prototype.hasOwnProperty.call(translatedDoc.frontmatter, schemaField.name)) {
           errors.push({
             message: `Missing required field: '${schemaField.name}'`,
             offendingField: schemaField.name,

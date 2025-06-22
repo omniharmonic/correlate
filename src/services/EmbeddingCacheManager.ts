@@ -43,7 +43,7 @@ export class EmbeddingCacheManager {
 
   private getCacheFilePath(libraryPath: string): string {
     // Create a safe filename from the library path
-    const safeFileName = Buffer.from(libraryPath).toString('base64').replace(/[\/\+]/g, '_') + '.json';
+    const safeFileName = Buffer.from(libraryPath).toString('base64').replace(/[/+]/g, '_') + '.json';
     return path.join(this.cacheDir, safeFileName);
   }
 

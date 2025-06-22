@@ -58,7 +58,7 @@ export class CorrelationEngine {
    * @returns The refined correlation mapping.
    */
   public refineCorrelation(mappings: CorrelationMapping[], feedback: UserFeedback[]): CorrelationMapping[] {
-    let refinedMappings = [...mappings];
+    const refinedMappings = [...mappings];
 
     for (const item of feedback) {
       const { originalMapping, type, correctedMapping } = item;
