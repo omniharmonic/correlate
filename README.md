@@ -57,13 +57,56 @@ Correlate is a powerful desktop application that uses AI to intelligently correl
 ### Installation
 
 1. **Download** the latest release for your platform:
-   - **macOS**: `Correlate-v1.0.0-mac.dmg`
-   - **Windows**: `Correlate-v1.0.0-win.exe`
-   - **Linux**: `Correlate-v1.0.0-linux.AppImage`
+   - **macOS**: `Correlate-v1.0.13-mac.dmg`
+   - **Windows**: `Correlate-v1.0.13-win.exe`
+   - **Linux**: `Correlate-v1.0.13-linux.AppImage`
 
 2. **Install** and launch the application
 
 3. **Start correlating** schemas and translating documents!
+
+### Running Unsigned Builds
+
+Since we don't yet have developer certificates, you'll need to bypass security warnings on some platforms:
+
+#### macOS
+The app is currently unsigned, so macOS Gatekeeper will block it initially:
+
+1. **Download** and mount the `.dmg` file
+2. **Drag** Correlate to your Applications folder
+3. **Right-click** on Correlate in Applications and select "Open"
+4. **Click "Open"** in the security dialog that appears
+5. Alternatively, you can disable Gatekeeper temporarily:
+   ```bash
+   sudo spctl --master-disable
+   # Run the app, then re-enable:
+   sudo spctl --master-enable
+   ```
+
+#### Windows
+Windows Defender may show a "Windows protected your PC" warning:
+
+1. **Click "More info"** in the warning dialog
+2. **Click "Run anyway"** to launch the application
+3. You may need to add an exception in Windows Defender
+
+#### Linux
+The AppImage should run without issues:
+```bash
+chmod +x Correlate-v1.0.13-linux.AppImage
+./Correlate-v1.0.13-linux.AppImage
+```
+
+#### Alternative: Run from Source
+If you encounter persistent issues with unsigned binaries:
+
+```bash
+# Clone and run in development mode
+git clone https://github.com/omniharmonic/correlate.git
+cd correlate
+npm ci
+npm start
+```
 
 ## 📖 Usage Guide
 
