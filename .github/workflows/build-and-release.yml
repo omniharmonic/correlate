@@ -99,7 +99,7 @@ jobs:
         APPLE_ID: ${{ secrets.APPLE_ID }}
         APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
         APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      run: npx electron-notarize --bundle-id com.opencivics.correlate --apple-id $APPLE_ID --apple-id-password $APPLE_ID_PASSWORD --team-id $APPLE_TEAM_ID ./out/Correlate-darwin-x64/Correlate.app
+      run: npx electron-notarize --bundle-id com.correlate.app --apple-id $APPLE_ID --apple-id-password $APPLE_ID_PASSWORD --team-id $APPLE_TEAM_ID ./out/Correlate-darwin-x64/Correlate.app
         
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

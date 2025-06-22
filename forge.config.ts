@@ -13,9 +13,9 @@ const config: ForgeConfig = {
     name: 'Correlate',
     executableName: 'correlate',
     icon: './public/app-icon', // Electron Forge will automatically append platform-specific extensions
-    appBundleId: 'com.opencivics.correlate',
+    appBundleId: 'com.correlate.app',
     appCategoryType: 'public.app-category.productivity',
-    appCopyright: 'Copyright © 2025 OpenCivics. All rights reserved.',
+          appCopyright: 'Copyright © 2025 Correlate. All rights reserved.',
     appVersion: '1.0.0',
     buildVersion: '1.0.0',
     // Code signing configuration
@@ -29,7 +29,7 @@ const config: ForgeConfig = {
     } : undefined,
     // Windows code signing
     win32metadata: {
-      CompanyName: 'OpenCivics',
+      CompanyName: 'Correlate',
       FileDescription: 'AI-powered schema correlation and document translation tool',
       ProductName: 'Correlate',
       InternalName: 'Correlate'

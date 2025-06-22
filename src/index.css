@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    /* OpenCivics Brand Colors as CSS custom properties */
+    /* Correlate Brand Colors as CSS custom properties */
     --oc-green: 78, 250, 159; /* #4efa9f */
     --oc-blue: 59, 32, 233;   /* #3b20e9 */
     --oc-pink: 250, 82, 115;  /* #fa5273 */
