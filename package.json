@@ -1,7 +1,7 @@
 {
   "name": "correlate",
   "productName": "Correlate",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "AI-powered schema correlation and document translation tool for knowledge organization",
   "main": ".vite/build/main.js",
   "scripts": {
