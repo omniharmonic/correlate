@@ -22,7 +22,7 @@ module.exports = {
         display: ['Space Grotesk', 'Inter', 'sans-serif'],
       },
       colors: {
-        // Correlate Brand Colors
+        // OpenCivics Brand Colors
         'oc-green': 'rgb(78, 250, 159)',
         'oc-blue': 'rgb(59, 32, 233)',
         'oc-pink': 'rgb(250, 82, 115)',

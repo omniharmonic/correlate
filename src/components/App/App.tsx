@@ -743,7 +743,7 @@ const App: React.FC = () => {
         fontSize: '14px',
         color: theme === 'lunarpunk' ? 'white' : 'black'
       }}>
-        Made with 💙 by the Correlate team
+        Made with 💙 by OpenCivics Labs
       </p>
     </div>
   );

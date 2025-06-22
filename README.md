@@ -151,15 +151,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- **OpenCivics** - For supporting open-source knowledge management tools
 - **Ollama** - For providing excellent local LLM infrastructure
 - **Google Generative AI** - For reliable cloud AI fallback capabilities
-- **Open Source Community** - For supporting knowledge management tools
 
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/omniharmonic/correlate/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/omniharmonic/correlate/discussions)
+- **Email**: support@opencivics.org
 
 ---
 
-**Built with ❤️ by the Correlate team** 
+**Built with ❤️ by the OpenCivics team** 
