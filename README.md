@@ -2,7 +2,7 @@
 
 **AI-powered schema correlation and document translation tool for knowledge organization**
 
-![Correlate Logo](./public/opencivics-logo.svg)
+
 
 Correlate is a powerful desktop application that uses AI to intelligently correlate different knowledge management schemas and translate documents between them. Whether you're migrating from Notion to Obsidian, standardizing team documentation, or bridging different organizational systems, Correlate makes schema translation seamless and intelligent.
 

@@ -149,11 +149,6 @@ const App: React.FC = () => {
       padding: '32px 24px'
     }}>
       <div style={{ marginBottom: '32px' }}>
-        <img 
-          src="/opencivics-logo.svg" 
-          alt="OpenCivics" 
-          style={{ height: '48px', width: 'auto', marginBottom: '20px' }}
-        />
         <h1 style={{
           fontSize: '36px',
           fontWeight: 'bold',
@@ -748,7 +743,7 @@ const App: React.FC = () => {
         fontSize: '14px',
         color: theme === 'lunarpunk' ? 'white' : 'black'
       }}>
-        Made with 💙 By OpenCivics Labs
+        Made with 💙 by the Correlate team
       </p>
     </div>
   );
@@ -784,17 +779,9 @@ const App: React.FC = () => {
           <div 
             onClick={handleLogoClick}
             style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px',
               cursor: hasProgress ? 'pointer' : 'default'
             }}
           >
-            <img 
-              src="/opencivics-logo.svg" 
-              alt="OpenCivics" 
-              style={{ height: '20px', width: 'auto' }}
-            />
             <h1 style={{
               fontSize: '24px',
               fontWeight: 'bold',
